@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<title>Soil Types</title>
+	<script src="d3/d3.js" charset="utf-8"></script>
+    </head>
+    <body>
+	<script type="text/javascript">
+
+	 //Display specifications
+	 var margin = {top: 10, right: 10, bottom: 10, left: 10};
+	 var width = 1500 - margin.left - margin.right;
+	 var height = 900 - margin.top - margin.bottom;
+
+	 //Dimensions for the data visualization, NEED TO MANUALLY ADJUST FOR DIFFERENT DATA
+	 //Write function to determine col,row automatically
+	 //15120 has factors 40x378, 60x252, 80x189, 90x168, and 120x126
+	 var col = 189;
+	 var row = 80;
+
+	 var svg = d3.select("body")
+		     .append("svg")
+		     .attr("width", width + margin.left + margin.right)
+		     .attr("height", height + margin.top + margin.bottom)
+		     .append("g")
+		     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	 d3.csv("resources/trainSoilCodes.csv", function (d) {
+	     return {
+		 id: d.Id,
+		 soilType: d.Soil_Types
+	     };
+	 }).then(function (data) {
+
+	     //console.log(data);
+
+	     //Set scales    
+	     var xScale = d3.scaleLinear()
+			    .domain([0, col])
+			    .range([0, width]);
+	     
+	     var yScale = d3.scaleLinear()
+			    .domain([0, row])
+			    .range([0, height]);
+	     
+  	     var rect = svg.selectAll("rect")
+			   .data(data)
+			   .enter()
+			   .append("rect")
+			   .attr("x", function (d) {
+			       return xScale((d.id - 1) % col);
+			   })
+			   .attr("y", function (d) {
+			       return yScale(Math.ceil((d.id / col) - 1));
+			   })
+			   .attr("width", width / col)
+			   .attr("height", height / row)
+	     		   .style("fill", function (d) {
+			       return "rgba(0,250,0," + d.soilType / 40 + ")";
+			   })
+			   .on("mouseover", function (d) {
+			       d3.select(this).transition()
+				 .attr("x", function (d) {
+				     return xScale((d.id - 1) % col) - 2;
+				 })
+				 .attr("y", function (d) {
+				     return yScale(Math.ceil((d.id / col) - 1)) - 2;
+				 })
+				 .attr("width", width / col + 4)
+				 .attr("height", height / row + 4)
+				 .style("fill", "orange");
+			   })
+			   .on("mouseout", function (d) {
+			       d3.select(this).transition()
+				 .attr("x", function (d) {
+				     return xScale((d.id - 1) % col);
+				 })
+				 .attr("y", function (d) {
+				     return yScale(Math.ceil((d.id / col) - 1));
+				 })
+				 .attr("width", width / col)
+				 .attr("height", height / row)
+				 .style("fill", function (d) {
+				     return "rgba(0,250,0," + d.soilType / 40 + ")";
+				 })
+			   })
+			   .append("title")
+			   .text(function (d) {
+			       return "Id: " + d.id + "\nSoil Type:" + d.soilType;
+			   });
+	 });
+	 
+	</script>
+    </body>
+</html>
